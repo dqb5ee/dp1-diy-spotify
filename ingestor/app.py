@@ -4,7 +4,7 @@ import mysql.connector
 import boto3
 from chalice import Chalice
 
-app = Chalice(app_name='backend')
+app = Chalice(app_name='ingestor')
 app.debug = True
 
 # s3 things
@@ -33,24 +33,14 @@ def s3_handler(event):
         # get the file, read it, load it into JSON as an object
         response = s3.get_object(Bucket=S3_BUCKET, Key=event.key)
         text = response["Body"].read().decode()
-
-        # Check if the file content is empty
-        if not text.strip():
-            app.log.error("File is empty or contains only whitespace: %s", event.key)
-            return
-
-        try:
-            data = json.loads(text)
-        except json.JSONDecodeError as e:
-            app.log.error("Failed to parse JSON from file %s: %s", event.key, str(e))
-            return
+        data = json.loads(text)
 
         # parse the data fields 1-by-1 from 'data'
-        TITLE = data.get('title', '')
-        ALBUM = data.get('album', '')
-        ARTIST = data.get('artist', '')
-        YEAR = data.get('year', '')
-        GENRE = data.get('genre', '')
+        TITLE = data.get("title")
+        ALBUM = data.get("album")
+        ARTIST = data.get("artist")
+        YEAR = data.get("year")
+        GENRE = data.get("genre")
 
         # get the unique ID for the bundle to build the mp3 and jpg URLs
         keyhead = event.key
